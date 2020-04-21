@@ -6,10 +6,15 @@ import sys
 class CPU:
     """Main CPU class."""
 
- # Step 1: Add the constructor to cpu.py
+    # Step 1: Add the constructor to cpu.py
     # Add list properties to the CPU class to hold 256 bytes of memory and 8 general-purpose registers.
     # Also add properties for any internal registers you need, e.g. PC.
     # Later on, you might do further initialization here, e.g. setting the initial value of the stack pointer.
+
+    HLT = 1
+    LDI = 130
+    PRN = 71
+
     def __init__(self):
         """Construct a new CPU."""
         # 256 bytes of memory
@@ -18,15 +23,38 @@ class CPU:
         self.register = [0] * 8
         # PC
         self.pc = 0
-        # Commands
-        self.commands = {
-            0b00000001: self.hlt,
-            0b10000010: self.ldi,
-            0b01000111: self.prn
-        }
+
     # accepts the address in RAM and returns the value stored there
 
-    
+    # Step 2: Add RAM functions
+    # In CPU, add method ram_read() and ram_write() that access the RAM inside the CPU object.
+    # ram_read() should accept the address to read and return the value stored there.
+    # raw_write() should accept a value to write, and the address to write it to.
+
+    def ram_read(self, address):
+        return self.ram[address]
+
+    def ram_write(self, address, value):
+        self.ram[address] = value
+
+    # Step 4
+    # halt the CPU and exit the emulator
+    def hlt(self, operand_a, operand_b):
+        return (0, False)
+    # load immediate, store a value in a register, or set this register to this value
+
+    # Step 5: Add the LDI instruction
+
+    def ldi(self, operand_a, operand_b):
+        self.reg[operand_a] = operand_b
+        return (3, True)
+
+    # Step 6: Add the PRN instruction
+    # prints the numeric value stored in a register
+
+    def prn(self, operand_a, operand_b):
+        print(self.reg[operand_a])
+        return (2, True)
 
     def load(self):
         """Load a program into memory."""
@@ -79,5 +107,24 @@ class CPU:
         print()
 
     def run(self):
+        # Step 3: Implement the core of CPU's run() method
         """Run the CPU."""
-        pass
+        running = True
+
+        while running:
+            ir = self.ram_read(self.pc)
+
+            if ir == self.HLT:
+                running = False
+            elif ir == self.LDI:
+                target_register = self.ram_read(self.pc + 1)
+                value = self.ram_read(self.pc + 2)
+                self.register[target_register] = value
+                self.pc = self.pc + 3
+            elif ir == self.PRN:
+                print(self.register[self.ram_read(self.pc + 1)])
+                self.pc = self.pc + 2
+            else:
+                print('Bad instruction')
+                self.trace()
+                running = False
