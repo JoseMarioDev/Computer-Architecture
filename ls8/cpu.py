@@ -25,12 +25,14 @@ class CPU:
         self.reg[7] = 0xF4
         self.dispatch = {}
         self.dispatch[self.HLT] = self.halt
-        self.dispatch[self.LDI] = self.load_immediate
-        self.dispatch[self.PRN] = self.sys_out
+        self.dispatch[self.LDI] = self.ldi
+        self.dispatch[self.PRN] = self.prn
         self.dispatch[self.MUL] = self.mul
         self.dispatch[self.ADD] = self.add
         self.dispatch[self.PUSH] = self.push
         self.dispatch[self.POP] = self.pop
+        self.dispatch[self.CALL] = self.call
+        self.dispatch[self.RET] = self.ret
 
     def load(self, filename):
         print(filename)
@@ -103,13 +105,13 @@ class CPU:
     def halt(self):
         exit()
 
-    def load_immediate(self):
+    def ldi(self):
         target_register = self.ram_read(self.pc + 1)
         value = self.ram_read(self.pc + 2)
         self.reg[target_register] = value
         self.pc = self.pc + 3
 
-    def sys_out(self):
+    def prn(self):
         print(self.reg[self.ram_read(self.pc + 1)])
         self.pc = self.pc + 2
 
@@ -130,6 +132,15 @@ class CPU:
         self.reg[self.ram_read(self.pc + 1)] = self.ram_read(self.reg[7])
         self.reg[7] = self.reg[7] + 1
         self.pc = self.pc + 2
+
+    def call(self):
+        self.reg[7] = self.reg[7] - 1
+        self.ram_write(self.reg[7], self.pc + 2)
+        self.pc = self.reg[self.ram_read(self.pc + 1)]
+
+    def ret(self):
+        self.pc = self.ram_read(self.reg[7])
+        self.reg[7] = self.reg[7] + 1
 
     def run(self):
         """Run the CPU."""
