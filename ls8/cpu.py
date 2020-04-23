@@ -14,6 +14,7 @@ class CPU:
     HLT = 1
     LDI = 130
     PRN = 71
+    MUL = 162
 
     def __init__(self):
         """Construct a new CPU."""
@@ -56,26 +57,55 @@ class CPU:
         print(self.reg[operand_a])
         return (2, True)
 
-    def load(self):
+    # def load(self):
+    #     """Load a program into memory."""
+
+    #     address = 0
+
+    #     # For now, we've just hardcoded a program:
+
+    #     program = [
+    #         # From print8.ls8
+    #         0b10000010,  # LDI R0,8
+    #         0b00000000,
+    #         0b00001000,
+    #         0b01000111,  # PRN R0
+    #         0b00000000,
+    #         0b00000001,  # HLT
+    #     ]
+
+    #     for instruction in program:
+    #         self.ram[address] = instruction
+    #         address += 1
+
+    def load(self, filename):
+        print(filename)
         """Load a program into memory."""
+        try:
+            address = 0
+            # Open the file
+            with open(filename) as f:
+                # Read all the lines
+                for line in f:
+                    # Parse out comments
+                    comment_split = line.strip().split("#")
+                    # Cast the numbers from strings to ints
+                    value = comment_split[0].strip()
+                    # Ignore blank lines
+                    if value == "":
+                        continue
 
-        address = 0
+                    num = int(value, 2)
+                    self.ram[address] = num
+                    address += 1
 
-        # For now, we've just hardcoded a program:
+        except FileNotFoundError:
+            print("File not found")
+            sys.exit(2)
 
-        program = [
-            # From print8.ls8
-            0b10000010,  # LDI R0,8
-            0b00000000,
-            0b00001000,
-            0b01000111,  # PRN R0
-            0b00000000,
-            0b00000001,  # HLT
-        ]
-
-        for instruction in program:
-            self.ram[address] = instruction
-            address += 1
+    if len(sys.argv) != 2:
+        print("ERROR: Must have file name")
+        sys.exit(1)
 
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
@@ -102,7 +132,7 @@ class CPU:
         ), end='')
 
         for i in range(8):
-            print(" %02X" % self.reg[i], end='')
+            print(" %02X" % self.register[i], end='')
 
         print()
 
@@ -124,6 +154,10 @@ class CPU:
             elif ir == self.PRN:
                 print(self.register[self.ram_read(self.pc + 1)])
                 self.pc = self.pc + 2
+            elif ir == self.MUL:
+                print(self.register[self.ram_read(self.pc + 1)]
+                      * self.register[self.ram_read(self.pc + 2)])
+                self.pc = self.pc + 3
             else:
                 print('Bad instruction')
                 self.trace()
