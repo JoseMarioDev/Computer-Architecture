@@ -37,27 +37,23 @@ class CPU:
     def load(self, filename):
         print(filename)
         """Load a program into memory."""
-        try:
-            address = 0
-            # Open the file
-            with open(filename) as f:
-                # Read all the lines
-                for line in f:
-                    # Parse out comments
-                    comment_split = line.strip().split("#")
-                    # Cast the numbers from strings to int
-                    value = comment_split[0].strip()
-                    # Ignore blank lines
-                    if value == "":
-                        continue
 
-                    num = int(value, 2)
-                    self.ram[address] = num
-                    address += 1
+        address = 0
+        # Open the file
+        with open(filename) as f:
+            # Read all the lines
+            for line in f:
+                # Parse out comments
+                comment_split = line.strip().split("#")
+                # Cast the numbers from strings to int
+                value = comment_split[0].strip()
+                # Ignore blank lines
+                if value == "":
+                    continue
 
-        except FileNotFoundError:
-            print("File not found")
-            sys.exit(2)
+                num = int(value, 2)
+                self.ram[address] = num
+                address += 1
 
     if len(sys.argv) != 2:
         print("ERROR: Must have file name")
