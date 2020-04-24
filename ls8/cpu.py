@@ -26,7 +26,7 @@ class CPU:
         self.pc = 0
         self.ram = [00000000] * 256
         self.reg = [0] * 8
-        self.reg[7] = 0xF4
+        self.reg[7] = 0xF4  # starting point for stack
         self.equal = 0
         self.dispatch = {}
         self.dispatch[self.HLT] = self.halt
@@ -154,8 +154,7 @@ class CPU:
         if self.reg[self.ram_read(self.pc + 1)] == self.reg[self.ram_read(self.pc + 2)]:
             self.equal = 1
         else:
-            self.equal = 0
-        # print(f'Equal Flag: {self.equal}')
+            self.equal = 0        
         self.pc += 3
 
     def jeq(self):
