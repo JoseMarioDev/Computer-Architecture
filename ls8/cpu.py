@@ -72,11 +72,16 @@ class CPU:
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
 
+        # elif op == "SUB": etc
         if op == "ADD":
             self.reg[reg_a] += self.reg[reg_b]
         elif op == "MUL":
             self.reg[reg_a] *= self.reg[reg_b]
-        # elif op == "SUB": etc
+        elif op == "CMP":
+            if self.reg[self.ram_read(self.pc + 1)] == self.reg[self.ram_read(self.pc + 2)]:
+                self.equal = 1
+            else:
+                self.equal = 0
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -129,6 +134,10 @@ class CPU:
         self.alu('MUL', self.ram_read(self.pc + 1), self.ram_read(self.pc + 2))
         self.pc = self.pc + 3
 
+    def cmp(self):
+        self.alu('CMP', self.ram_read(self.pc + 1), self.ram_read(self.pc + 2))
+        self.pc += 3
+
     def push(self):
         self.reg[7] = self.reg[7] - 1
         self.ram_write(self.reg[7], self.reg[self.ram_read(self.pc + 1)])
@@ -147,15 +156,6 @@ class CPU:
     def ret(self):
         self.pc = self.ram_read(self.reg[7])
         self.reg[7] = self.reg[7] + 1
-
-    def cmp(self):
-        # Compare the values in two registers.
-        # If they are equal, set equal flag to 1, otherwise set it to 0.
-        if self.reg[self.ram_read(self.pc + 1)] == self.reg[self.ram_read(self.pc + 2)]:
-            self.equal = 1
-        else:
-            self.equal = 0        
-        self.pc += 3
 
     def jeq(self):
         # if equal flag ==true, jump to address stored in given register
