@@ -16,13 +16,18 @@ class CPU:
     LDI = 130
     ADD = 160
     MUL = 162
+    CMP = 167
+    JMP = 84
+    JEQ = 85
+    JNE = 86
 
     def __init__(self):
         """Construct a new CPU."""
         self.pc = 0
         self.ram = [00000000] * 256
         self.reg = [0] * 8
-        self.reg[7] = 0xF4
+        self.reg[7] = 0xF4  # starting point for stack
+        self.equal = 0
         self.dispatch = {}
         self.dispatch[self.HLT] = self.halt
         self.dispatch[self.LDI] = self.ldi
@@ -33,6 +38,11 @@ class CPU:
         self.dispatch[self.POP] = self.pop
         self.dispatch[self.CALL] = self.call
         self.dispatch[self.RET] = self.ret
+
+        self.dispatch[self.CMP] = self.cmp  # compare
+        self.dispatch[self.JMP] = self.jmp  # jump
+        self.dispatch[self.JEQ] = self.jeq  # jump equal
+        self.dispatch[self.JNE] = self.jne  # jump not equal
 
     def load(self, filename):
         print(filename)
@@ -62,11 +72,16 @@ class CPU:
     def alu(self, op, reg_a, reg_b):
         """ALU operations."""
 
+        # elif op == "SUB": etc
         if op == "ADD":
             self.reg[reg_a] += self.reg[reg_b]
         elif op == "MUL":
             self.reg[reg_a] *= self.reg[reg_b]
-        # elif op == "SUB": etc
+        elif op == "CMP":
+            if self.reg[self.ram_read(self.pc + 1)] == self.reg[self.ram_read(self.pc + 2)]:
+                self.equal = 1
+            else:
+                self.equal = 0
         else:
             raise Exception("Unsupported ALU operation")
 
@@ -119,6 +134,10 @@ class CPU:
         self.alu('MUL', self.ram_read(self.pc + 1), self.ram_read(self.pc + 2))
         self.pc = self.pc + 3
 
+    def cmp(self):
+        self.alu('CMP', self.ram_read(self.pc + 1), self.ram_read(self.pc + 2))
+        self.pc += 3
+
     def push(self):
         self.reg[7] = self.reg[7] - 1
         self.ram_write(self.reg[7], self.reg[self.ram_read(self.pc + 1)])
@@ -137,6 +156,25 @@ class CPU:
     def ret(self):
         self.pc = self.ram_read(self.reg[7])
         self.reg[7] = self.reg[7] + 1
+
+    def jeq(self):
+        # if equal flag ==true, jump to address stored in given register
+        if self.equal == 1:
+            self.pc = self.reg[self.ram_read(self.pc + 1)]
+        else:
+            self.pc += 2
+
+    def jne(self):
+        # if equal flag is false, jump to the address stored in given register
+        if self.equal == 0:
+            self.pc = self.reg[self.ram_read(self.pc + 1)]
+        else:
+            self.pc += 2
+
+    def jmp(self):
+        # Jump to the address stored in the given register.
+        # set pc to the address stored in given register
+        self.pc = self.reg[self.ram_read(self.pc + 1)]
 
     def run(self):
         """Run the CPU."""
