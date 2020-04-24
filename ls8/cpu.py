@@ -16,6 +16,10 @@ class CPU:
     LDI = 130
     ADD = 160
     MUL = 162
+    CMP = 167
+    JMP = 84
+    JEQ = 85
+    JNE = 86
 
     def __init__(self):
         """Construct a new CPU."""
@@ -23,6 +27,7 @@ class CPU:
         self.ram = [00000000] * 256
         self.reg = [0] * 8
         self.reg[7] = 0xF4
+        self.equal = 0
         self.dispatch = {}
         self.dispatch[self.HLT] = self.halt
         self.dispatch[self.LDI] = self.ldi
@@ -33,6 +38,11 @@ class CPU:
         self.dispatch[self.POP] = self.pop
         self.dispatch[self.CALL] = self.call
         self.dispatch[self.RET] = self.ret
+
+        self.dispatch[self.CMP] = self.cmp  # compare
+        self.dispatch[self.JMP] = self.jmp  # jump
+        self.dispatch[self.JEQ] = self.jeq  # jump equal
+        self.dispatch[self.JNE] = self.jne  # jump not equal
 
     def load(self, filename):
         print(filename)
@@ -137,6 +147,35 @@ class CPU:
     def ret(self):
         self.pc = self.ram_read(self.reg[7])
         self.reg[7] = self.reg[7] + 1
+
+    def cmp(self):
+        # Compare the values in two registers.
+        # If they are equal, set equal flag to 1, otherwise set it to 0.
+        if self.reg[self.ram_read(self.pc + 1)] == self.reg[self.ram_read(self.pc + 2)]:
+            self.equal = 1
+        else:
+            self.equal = 0
+        # print(f'Equal Flag: {self.equal}')
+        self.pc += 3
+
+    def jeq(self):
+        # if equal flag ==true, jump to address stored in given register
+        if self.equal == 1:
+            self.pc = self.reg[self.ram_read(self.pc + 1)]
+        else:
+            self.pc += 2
+
+    def jne(self):
+        # if equal flag is false, jump to the address stored in given register
+        if self.equal == 0:
+            self.pc = self.reg[self.ram_read(self.pc + 1)]
+        else:
+            self.pc += 2
+
+    def jmp(self):
+        # Jump to the address stored in the given register.
+        # set pc to the address stored in given register
+        self.pc = self.reg[self.ram_read(self.pc + 1)]
 
     def run(self):
         """Run the CPU."""
